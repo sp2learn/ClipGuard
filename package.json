@@ -1,0 +1,16 @@
+{
+  "name": "clipguard-vividscale-poc",
+  "version": "1.0.0",
+  "description": "ClipGuard (VividScale) — Zero-Ops Multimodal Video Brand Safety, Product Placement & Semantic Search POC powered by Gemini 3.8 Flash, Gemini Embedding 2, Cloud Run, and BigQuery",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.js",
+    "dev": "node --env-file-if-exists=.env --watch server.js"
+  },
+  "dependencies": {
+    "@google/genai": "^2.3.0",
+    "express": "^5.1.0",
+    "multer": "^2.0.0"
+  }
+}

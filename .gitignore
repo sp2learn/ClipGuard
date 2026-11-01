@@ -1,0 +1,19 @@
+# Secrets & Environment Variables (NEVER commit)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*service-account*.json
+*credentials*.json
+
+# Local runtime cache & uploaded assets
+.uploaded-videos-cache.json
+uploads/
+tmp/
+
+# Dependencies & OS files
+node_modules/
+npm-debug.log*
+.DS_Store
+
