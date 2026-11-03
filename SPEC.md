@@ -18,13 +18,13 @@ Every UI component, metric card, and backend workflow is purpose-built to answer
 
 | Screen Section | Feature | CPO Stakeholder Value (Product / Revenue) | CIO Stakeholder Value (IT / Ops / Security / TCO) |
 | :--- | :--- | :--- | :--- |
-| **Top Executive Telemetry Bar** | Live Latency, Token Count, Unit Cost, Safety Verdict | Faster creator approval turnaround (`<5s` vs `3–4 min`), accelerating ad monetization. | Predictable cost per unit (`~$0.0016`) and zero idle GPU/VM server charges. |
+| **Top Executive Telemetry Bar** | Live Latency, Token Count, Unit Cost, Safety Verdict | Faster creator approval turnaround (`<5s` vs `3–4 min`), accelerating ad monetization. | Predictable cost per unit (`~$0.0325`) and zero idle GPU/VM server charges. |
 | **Video Player & Click-to-Seek Timeline** | Interactive player with live bounding boxes & jump-to-timestamp clips | Contextual brand safety: visually proves why an ad was approved or flagged (`00:14`). | Native multimodal precision in a single token stream without running fragile FFmpeg frame-slicing clusters. |
 | **GARM Brand Safety Inspector** | Policy pass/fail + violation tags (adult, competitor, FTC speech) | Protects advertiser brand equity and eliminates campaign churn. | Automated compliance governance with auditable BigQuery & Cloud Logging trails. |
 | **Hybrid Cross-Modal Search Bar** | Natural-language semantic + lexical brand search | **New Monetization Stream:** Advertisers can search and sponsor exact contextual moments instantly. | Proves **BigQuery `VECTOR_SEARCH`** (`gemini-embedding-2`) integration without licensing an external vector DB SaaS. |
 | **Operational JSON Inspector** | Collapsible raw structured output (`VIDEO_ANALYSIS_JSON_SCHEMA`) | Deterministic schema feeding downstream CRM, ad-server, and billing APIs. | Enterprise RBAC, strict schema validation, and IAM service-account auditability. |
 | **GCS Asset Manager & Atomic Purge** | Tenant-isolated video listing, 7-day lifecycle countdown, & `🗑️ Delete` | Gives enterprise brands self-service control over campaign asset lifecycles. | Solves storage bloat & GDPR/CCPA retention via automated 7-day GCS lifecycle rules + two-way atomic purge. |
-| **Editable AWS vs. GCP TCO Dashboard** | Line-item editable cost simulator (Rekognition, Transcribe, Bedrock vs. Gemini) | Unlocks 99%+ gross margin improvement on video moderation & indexing. | Transparent, line-by-line TCO proof replacing 4 AWS services with 1 serverless Google Cloud stream. |
+| **Editable AWS vs. GCP TCO Dashboard** | Line-item editable cost simulator (Rekognition, Transcribe, Bedrock vs. Gemini) | Unlocks ~90% cost reduction on video moderation & indexing. | Transparent, line-by-line TCO proof replacing 4 AWS services with 1 serverless Google Cloud stream. |
 
 ---
 
@@ -87,35 +87,32 @@ To satisfy enterprise privacy/compliance officers, the **GCS Asset & Purge Manag
 ## 3. AWS Multi-Service vs. Google Cloud Native TCO Architecture
 
 ### 3.1 The Traditional AWS Video Inspection Stack (60-Second Video)
-To extract timestamps, speech transcripts, brand safety moderation, and ad copy on AWS, engineering teams must stitch together **four separate services**:
 - **Amazon Rekognition Video (Content Moderation):** `\$0.1000 / min`
-- **Amazon Rekognition Video (Label / Object Detection):** `\$0.1000 / min`
-- **Amazon Transcribe (Audio-to-Text Transcription):** `\$0.0240 / min`
-- **Amazon Bedrock (Claude 3.5 Sonnet / Haiku Copy Synthesis):** `\$0.0050 / run`
-- **AWS EC2 / Lambda / SQS Glue Compute (FFmpeg Frame Slicing & Sync):** `\$0.0150 / run`
-- **Total AWS Cost per 60s Video:** **`\$0.2440 / video`** *(or `\$0.2290` excluding EC2 glue)*
+- **Amazon Rekognition Video (Labels + Custom Brand BBox):** `\$0.1600 / min`
+- **Amazon Transcribe (Speech-to-Text):** `\$0.0240 / min`
+- **Amazon Bedrock (Ad Copy & Citation Synthesis):** `\$0.0200 / run`
+- **EC2 / Step Functions (FFmpeg Slicing, BBox & Citation Glue):** `\$0.0200 / run`
+- **Total AWS Cost per 60s Video:** **`\$0.3240 / video`**
 
-### 3.2 The Google Cloud Native Multimodal Stack (`gemini-3.8-flash` + `gemini-embedding-2`)
-- **Gemini Flash Multimodal Stream:** 60 seconds of video + audio (`~15,000` input tokens) + structured JSON output (`~500` output tokens):
-  - Input tokens: `15,000 × \$0.075 / 1M = \$0.001125`
-  - Output tokens: `500 × \$0.30 / 1M = \$0.000150`
-  - Subtotal Gemini Model Pass: **`~\$0.0013 / video`**
-- **Cloud Run Dispatcher + BigQuery Streaming & Vector Index:** **`~\$0.0003 / video`**
-- **Total Google Cloud Cost per 60s Video:** **`\$0.0016 / video`** *(editable in UI)*
+### 3.2 The Google Cloud Native Stack — Gemini 3.8 Flash, Standard Long-Term Pricing (Jan 2027+)
+- **Input:** `14,000 tokens × \$1.50 / 1M = \$0.02100`
+- **Output:** `1,500 tokens × \$7.50 / 1M = \$0.01125`
+- **Gemini model pass subtotal:** **`\$0.03225 / video`**
+- **Cloud Run + Pub/Sub orchestration:** **`\$0.0002 / video`**
+- **Total Google Cloud Cost per 60s Video:** **`≈ \$0.0325 / video`** *(editable in UI)*
 
-### 3.3 Unit Economics Comparison Table (50,000 Video Ads / Month Baseline)
+### 3.3 Unit Economics Comparison Table (60s Video Baseline @ 50,000 Videos / Month)
 
-| Cost Component | Traditional AWS Multi-Service Pipeline | Google Cloud Cross-Pillar Pipeline | Variance / Architectural Win |
+| Dimension | AWS 4-Service Stack | Google Cloud Stream | Architectural Win |
 | :--- | :--- | :--- | :--- |
-| **Vision & Moderation** | `\$10,000 / mo` (`\$0.200/vid` Rekognition Moderation + Labels) | **`\$0`** (Bundled in Native Gemini Stream) | **Eliminated** (Zero frame slicing) |
-| **Speech Transcription** | `\$1,200 / mo` (`\$0.024/vid` Amazon Transcribe) | **`\$0`** (Bundled in Native Gemini Stream) | **Eliminated** (No audio extraction lag) |
-| **LLM Synthesis & Copy** | `\$250 / mo` (`\$0.005/vid` Amazon Bedrock) | **`\$65 / mo`** (`\$0.0013/vid` Gemini Flash) | **-74% Cost** (Single unified model pass) |
-| **Orchestration & Compute** | `\$750 / mo` (`\$0.015/vid` EC2 / Lambda + SQS) | **`\$15 / mo`** (`\$0.0003/vid` Cloud Run + BigQuery) | **-98% Cost** (Scale-to-zero compute) |
-| **Total Monthly Spend (50k)** | **`\$12,200 / month`** | **`\$80 / month`** | **99.3% TCO Reduction** |
-| **Annualized Run-Rate** | **`\$146,400 / year`** | **`\$960 / year`** | **`\$145,440 / yr Saved`** *(at 50k/mo)* |
-| **Turnaround Latency** | `180 – 240 seconds` (3–4 min) | **`3 – 5 seconds`** | **~45x Faster Time-to-Ad-Ready** |
+| **Vision, 2D Brand BBox & Moderation** | `\$13,000 / mo` (`\$0.2600 / video`) | **`\$0 / mo`** | Bundled • Native 2D BBox |
+| **Speech STT & Frame Citations** | `\$1,200 / mo` (`\$0.0240 / video`) | **`\$0 / mo`** | Bundled • Zero Drift |
+| **LLM Ad Copy & Citation Synthesis** | `\$1,000 / mo` (`\$0.0200 / video`) | **`\$1,613 / mo`** (`\$0.03225 / video`) | 1 Pass Gemini 3.8 Flash |
+| **Orchestration & BBox Alignment** | `\$1,000 / mo` (`\$0.0200 / video`) | **`\$10 / mo`** (`\$0.0002 / video`) | Scale-to-Zero Cloud Run |
+| **Total Monthly TCO** | **`\$16,200 / mo`** | **`≈ \$1,623 / mo`** | **≈ 90% Total Cost Reduction** |
+| **Annualized** | **`\$194,400 / yr`** | **`≈ \$19,470 / yr`** | **`≈ \$174,930 / yr saved`** |
 
-*(Note: All per-service unit rates and monthly/daily volume numbers are dynamically editable in the UI's AWS vs. GCP TCO Executive Calculator.)*
+*(Scope: per-video AI + orchestration run cost. Excludes storage, BigQuery/Looker, human review, and one-time migration — validated during the 30-day pilot. All rates and volumes are editable in the UI's TCO calculator.)*
 
 ---
 
@@ -135,8 +132,8 @@ To protect credentials across local development, GitHub repositories, and produc
 
 ## 5. Executive 2-Minute Demo Script (Slide 4 Proof of Value)
 
-1. **The Hook (15s):** *"To prove we can eliminate AWS's 4-vendor latency and cut video moderation TCO by 99.3%, I built the VividScale Video AI Cockpit on Cloud Run, Gemini 3.8 Flash, Pub/Sub, and BigQuery Vector Search."*
-2. **The Execution (45s):** Upload a creator video (e.g., `piano_palying.MOV` or select a reel). Point to the **Top Executive Telemetry Bar** as latency (`~3.7s`), token count (`~15,420 tokens`), and unit cost (`~$0.0016` vs AWS `$0.2440`) populate.
+1. **The Hook (15s):** *"To prove we can eliminate AWS's 4-vendor latency and cut video moderation run cost by ~90%, I built the VividScale Video AI Cockpit on Cloud Run, Gemini 3.8 Flash, Pub/Sub, and BigQuery Vector Search."*
+2. **The Execution (45s):** Upload a creator video (e.g., `piano_palying.MOV` or select a reel). Point to the **Top Executive Telemetry Bar** as latency (`~3.7s`), token count (`~15,500 tokens`), and unit cost (`~$0.0325` vs AWS `$0.3240`) populate.
 3. **The CPO Win (30s):** Click a product placement timestamp (`00:14`). The video player seeks directly to that frame with live bounding boxes (`box_2d`), showing the GARM Brand Safety `SAFE` verdict and 5-language localized ad copy.
 4. **The CIO Win (30s):**
    - Expand the **Operational Raw JSON Inspector** to show the strict schema contract.

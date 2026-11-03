@@ -52,23 +52,7 @@ CREATE TABLE IF NOT EXISTS `vividscale_analytics.video_moment_embeddings` (
 )
 CLUSTER BY video_id, brand_safety_status;
 
--- 3. Create Vector Index for Sub-Second Cross-Video Semantic Moment Discovery
-CREATE VECTOR INDEX IF NOT EXISTS `vividscale_moment_cosine_idx`
-ON `vividscale_analytics.video_moment_embeddings`(multimodal_embedding)
-OPTIONS(
-  index_type = 'IVF',
-  distance_type = 'COSINE',
-  ivf_options = '{"num_lists": 500}'
-);
-
--- 4. Remote Model Registration for Online Query Embedding (gemini-embedding-2)
-CREATE OR REPLACE MODEL `vividscale_analytics.gemini_embedding_2`
-REMOTE WITH CONNECTION `us.vertex_ai_connection`
-OPTIONS (
-  ENDPOINT = 'gemini-embedding-2'
-);
-
--- 5. Looker Studio Executive Brand Safety & Unit Economics View
+-- 3. Looker Studio Executive Brand Safety & Unit Economics View
 CREATE OR REPLACE VIEW `vividscale_analytics.v_looker_brand_safety_dashboard` AS
 SELECT
   DATE(uploaded_at) AS ingest_date,
@@ -82,3 +66,20 @@ SELECT
   ROUND(COUNT(*) * (0.22 - 0.0041), 2) AS net_unit_cost_savings_usd
 FROM `vividscale_analytics.video_assets`
 GROUP BY ingest_date, platform, brand_safety_status;
+
+-- ============================================================================
+-- Enterprise Scale Extensions (Run after >5,000 embeddings & Vertex Connection)
+-- ============================================================================
+-- CREATE VECTOR INDEX IF NOT EXISTS `vividscale_moment_cosine_idx`
+-- ON `vividscale_analytics.video_moment_embeddings`(multimodal_embedding)
+-- OPTIONS(
+--   index_type = 'IVF',
+--   distance_type = 'COSINE',
+--   ivf_options = '{"num_lists": 500}'
+-- );
+--
+-- CREATE OR REPLACE MODEL `vividscale_analytics.gemini_embedding_2`
+-- REMOTE WITH CONNECTION `us.vertex_ai_connection`
+-- OPTIONS (
+--   ENDPOINT = 'gemini-embedding-2'
+-- );

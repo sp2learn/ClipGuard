@@ -3,509 +3,422 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ClipGuard | VividScale Multimodal AdTech Intelligence POC</title>
+  <title>ClipGuard Video AI Cockpit | Google Cloud Multimodal Studio</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.ico">
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-  <header class="top-header">
-    <div class="brand-cluster">
-      <div class="logo-mark" aria-hidden="true">CG</div>
-      <div>
-        <div class="eyebrow-row">
-          <span class="badge badge-accent">VIVIDSCALE ADTECH POC</span>
-          <span class="badge badge-subtle" id="model-badge">Gemini 3.8 Flash + Gemini Embedding 2</span>
+  <!-- TOP HEADER BAR: Brand + Big Upload Button + Quiet Settings Icon in Far Right Corner -->
+  <header class="top-header-stack">
+    <div class="top-bar-row">
+      <div class="brand-cluster">
+        <div class="logo-mark" aria-hidden="true">CG</div>
+        <div>
+          <h1>ClipGuard Video AI Cockpit</h1>
+          <span class="subtitle-text">Google Cloud Run • Cloud Pub/Sub • Gemini 3.8 Flash • BigQuery Vector Search</span>
         </div>
-        <h1>ClipGuard Multimodal Ad Intelligence</h1>
+      </div>
+
+      <div class="top-bar-actions">
+        <button type="button" class="btn-upload-hero" id="open-upload-modal-btn">
+          + Upload Video (.mp4 / .mov)
+        </button>
+        <button
+          type="button"
+          class="btn-settings-corner"
+          id="open-settings-modal-btn"
+          title="API Key &amp; Demo Settings"
+          aria-label="API Key and Demo Settings"
+        >
+          <span class="status-dot" id="api-status-dot"></span>
+          <span>⚙️</span>
+        </button>
       </div>
     </div>
 
-    <nav aria-label="Primary Workspace Views" class="primary-nav">
-      <ul class="nav-tabs" role="list">
-        <li>
-          <button type="button" class="nav-tab active" data-tab="analyzer" aria-current="page">
-            1. Live Video Analyzer
-          </button>
-        </li>
-        <li>
-          <button type="button" class="nav-tab" data-tab="search">
-            2. Cross-Video Semantic Search
-          </button>
-        </li>
-        <li>
-          <button type="button" class="nav-tab" data-tab="assets">
-            3. GCS Asset &amp; Purge Manager
-          </button>
-        </li>
-        <li>
-          <button type="button" class="nav-tab" data-tab="economics">
-            4. AWS vs. GCP TCO Calculator
-          </button>
-        </li>
-        <li>
-          <button type="button" class="nav-tab" data-tab="dashboard">
-            5. Brand Safety &amp; Pub/Sub Feed
-          </button>
-        </li>
-      </ul>
+    <!-- SECOND ROW: BIG VISIBLE NAVIGATION BUTTONS -->
+    <nav aria-label="Primary Workspace Views" class="big-nav-bar">
+      <button type="button" class="big-nav-btn active" data-tab="videos" aria-current="page">
+        🎬 1. Videos &amp; Inspection (<span id="nav-video-count">5</span>)
+      </button>
+      <button type="button" class="big-nav-btn" data-tab="search">
+        🔍 2. Cross-Video Search
+      </button>
+      <button type="button" class="big-nav-btn" data-tab="economics">
+        💰 3. AWS vs. GCP TCO
+      </button>
     </nav>
-
-    <div class="header-actions">
-      <button type="button" class="btn btn-secondary" id="open-upload-modal-btn">
-        + Upload / Ingest Video (.mp4)
-      </button>
-      <button type="button" class="btn btn-outline" id="open-settings-modal-btn">
-        <span class="status-dot" id="api-status-dot"></span>
-        <span id="api-status-label">Dual-Mode Config</span>
-      </button>
-    </div>
   </header>
-
-  <aside class="deprecation-banner" aria-label="SDK and Model Upgrade Notice">
-    <p>
-      <strong>Zero-Ops Multimodal Architecture Active:</strong>
-      Replaces the fragmented AWS 4-service stack (Rekognition + Transcribe + Bedrock + EC2/Lambda at <code>$0.244/video</code>, <code>3-4 min</code> latency) with a single native stream via
-      <code>gemini-3.8-flash</code>, Cloud Pub/Sub fan-out, and <code>gemini-embedding-2</code> in BigQuery (<code>$0.0016/video</code>, <code>~3.7s</code> latency, <strong>99.3% TCO reduction</strong>).
-    </p>
-  </aside>
-
-  <!-- EXECUTIVE DUAL-PERSONA TELEMETRY RIBBON (CPO Speed/Revenue + CIO TCO/Governance) -->
-  <section class="telemetry-ribbon" aria-label="Executive Live Video Telemetry">
-    <div class="telemetry-card">
-      <span class="telemetry-label">⚡ GCP Multimodal Latency</span>
-      <strong class="telemetry-value" id="tele-latency">3.68s</strong>
-      <span class="telemetry-delta delta-positive" id="tele-latency-delta">-176s vs. AWS (45x faster)</span>
-    </div>
-    <div class="telemetry-card">
-      <span class="telemetry-label">💰 Est. GCP Unit Cost</span>
-      <strong class="telemetry-value text-success" id="tele-cost">$0.0016</strong>
-      <span class="telemetry-delta delta-positive" id="tele-cost-delta">-99.3% vs. AWS ($0.2440)</span>
-    </div>
-    <div class="telemetry-card">
-      <span class="telemetry-label">🛡️ Brand Safety Verdict</span>
-      <strong class="telemetry-value" id="tele-safety">98% SAFE</strong>
-      <span class="telemetry-delta" id="tele-safety-sub">GARM Policy Pass • Zero Drift</span>
-    </div>
-    <div class="telemetry-card">
-      <span class="telemetry-label">🪙 Multimodal Tokens</span>
-      <strong class="telemetry-value" id="tele-tokens">15,420</strong>
-      <span class="telemetry-delta" id="tele-tokens-sub">Single Audio+Video+OCR Stream</span>
-    </div>
-  </section>
 
   <main class="workspace-main">
     <!-- =================================================================== -->
-    <!-- VIEW 1: LIVE VIDEO ANALYZER (Brand Safety, Placements, Ad Copy)     -->
+    <!-- TAB 1: VIDEOS LIBRARY (MASTER) & SINGLE-VIDEO INSPECTION (DETAIL)   -->
     <!-- =================================================================== -->
-    <section id="view-analyzer" class="tab-view active" aria-labelledby="heading-analyzer">
-      <div class="analyzer-grid">
-        <!-- Left Column: Creator Reel Selector + Interactive Multimodal Player -->
-        <div class="player-column">
-          <div class="panel">
-            <div class="panel-header">
-              <h2 id="heading-analyzer">Creator Reel Queue (GCS Bucket Stream)</h2>
-              <span class="text-muted" id="catalog-count-label">5 reels indexed</span>
-            </div>
-            <ul class="reel-selector-list" id="reel-selector-list" role="list"></ul>
-          </div>
+    <section id="view-videos" class="tab-view active" aria-labelledby="heading-videos">
 
-          <div class="panel video-player-panel">
-            <div class="video-stage-header">
-              <div>
-                <span class="platform-pill" id="player-platform-pill">TikTok</span>
-                <h3 id="player-video-title">Select a creator reel</h3>
-                <p class="text-muted" id="player-creator-meta">@maya.moves • gs://vividscale-raw-videos/...</p>
-              </div>
-              <div class="latency-chip-group">
-                <div class="metric-chip">
-                  <span class="metric-label">Gemini 3.8 Latency</span>
-                  <strong id="player-latency-val">3.84s</strong>
-                </div>
-                <div class="metric-chip">
-                  <span class="metric-label">Unit Cost</span>
-                  <strong class="text-success" id="player-cost-val">$0.0041</strong>
-                </div>
-              </div>
-            </div>
+      <!-- MASTER VIEW: ALL UPLOADED & PROCESSED VIDEOS -->
+      <div id="videos-master-view">
+        <div class="kpi-row" id="dashboard-kpi-row"></div>
 
-            <!-- Interactive Multimodal Stage -->
-            <div class="video-stage-container">
-              <!-- Native HTML5 Video element (used for uploaded MP4s and canvas capture stream) -->
-              <video
-                id="native-video-player"
-                class="native-video-el hidden"
-                controls
-                playsinline
-                width="360"
-                height="640"
-                preload="metadata"
-                poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='640' viewBox='0 0 360 640'%3E%3Crect width='360' height='640' fill='%230f172a'/%3E%3C/svg%3E"
-              >
-                <track kind="captions" srclang="en" label="English AI Transcript" default>
-              </video>
-
-              <!-- Synchronized 60fps Scene Synthesizer Canvas with live AI Bounding Boxes & OCR HUD -->
-              <canvas
-                id="multimodal-stage-canvas"
-                width="360"
-                height="640"
-                aria-label="Interactive multimodal video inspection viewport showing live bounding boxes, OCR, and audio transcript"
-              ></canvas>
-            </div>
-
-            <!-- Custom Scrubber & Timestamp Timeline Markers -->
-            <div class="timeline-controls">
-              <div class="playback-bar">
-                <button type="button" class="btn btn-primary btn-sm" id="play-pause-btn">
-                  Play Reel
-                </button>
-                <span class="timecode-readout" id="timecode-readout">00:00 / 01:00</span>
-                <label for="timeline-slider" class="sr-only">Seek video timeline</label>
-                <input
-                  type="range"
-                  id="timeline-slider"
-                  min="0"
-                  max="60"
-                  step="0.2"
-                  value="14"
-                >
-              </div>
-              <div class="timeline-markers" id="timeline-markers" aria-label="Detected moment markers"></div>
-            </div>
-
-            <div class="active-moment-readout" id="active-moment-readout">
-              <div class="readout-row">
-                <span class="modality-tag tag-visual">VISUAL</span>
-                <p id="live-visual-desc">Loading visual scene...</p>
-              </div>
-              <div class="readout-row">
-                <span class="modality-tag tag-audio">AUDIO</span>
-                <p id="live-audio-transcript">Loading speech transcript...</p>
-              </div>
-              <div class="readout-row">
-                <span class="modality-tag tag-ocr">OCR</span>
-                <p id="live-ocr-text">Loading on-screen text...</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Right Column: Gemini 3.8 Flash Structured Outputs -->
-        <div class="intelligence-column">
-          <!-- 1. GARM Brand Safety Scorecard -->
-          <article class="panel" aria-labelledby="heading-brand-safety">
-            <div class="panel-header">
-              <div>
-                <span class="eyebrow">SINGLE-STREAM MULTIMODAL COMPLIANCE</span>
-                <h2 id="heading-brand-safety">GARM Brand Safety Scorecard</h2>
-              </div>
-              <div class="safety-score-badge" id="safety-score-badge">
-                <span class="score-num" id="safety-score-num">98</span>
-                <span class="score-max">/100</span>
-              </div>
-            </div>
-
-            <div class="verdict-banner" id="safety-verdict-banner">
-              <strong id="safety-verdict-label">SAFE FOR ENTERPRISE ADS</strong>
-              <p id="safety-summary-rationale"></p>
-            </div>
-
-            <div id="safety-flags-container" class="safety-flags-container"></div>
-
-            <div class="garm-grid" id="garm-categories-grid"></div>
-          </article>
-
-          <!-- 2. Timestamped Product Placements -->
-          <article class="panel" aria-labelledby="heading-placements">
-            <div class="panel-header">
-              <div>
-                <span class="eyebrow">CLICK ANY TIMESTAMP TO SEEK PLAYER</span>
-                <h2 id="heading-placements">Timestamped Product Placements &amp; Logos</h2>
-              </div>
-              <span class="badge badge-subtle" id="placements-count-badge">4 detected</span>
-            </div>
-            <div class="placements-list" id="placements-list"></div>
-          </article>
-
-          <!-- 3. Localized Ad Copy & SEO Tags -->
-          <article class="panel" aria-labelledby="heading-localization">
-            <div class="panel-header">
-              <div>
-                <span class="eyebrow">REAL-TIME GLOBAL CAMPAIGN GENERATION</span>
-                <h2 id="heading-localization">Localized Ad Copy &amp; SEO Tags</h2>
-              </div>
-              <div class="locale-switcher" id="locale-switcher" role="group" aria-label="Select target market locale">
-                <button type="button" class="locale-btn active" data-locale="en-US">EN-US</button>
-                <button type="button" class="locale-btn" data-locale="es-MX">ES-LATAM</button>
-                <button type="button" class="locale-btn" data-locale="ja-JP">JA-JP</button>
-                <button type="button" class="locale-btn" data-locale="de-DE">DE-DE</button>
-                <button type="button" class="locale-btn" data-locale="pt-BR">PT-BR</button>
-              </div>
-            </div>
-            <div class="localized-card" id="localized-card"></div>
-          </article>
-
-          <!-- 4. Collapsible Operational JSON Inspector (CIO Governance & Downstream API Proof) -->
-          <article class="panel" aria-labelledby="heading-json-inspector">
-            <details id="operational-json-details">
-              <summary class="json-inspector-summary">
-                <div>
-                  <span class="eyebrow">CIO GOVERNANCE &amp; SCHEMA VALIDATION</span>
-                  <h2 id="heading-json-inspector" style="display:inline-block;margin:0;">Operational Raw JSON Inspector (Click to Expand)</h2>
-                </div>
-                <span class="badge badge-accent">Deterministic BigQuery / CRM Payload</span>
-              </summary>
-              <p class="text-muted" style="margin:0.65rem 0 0.5rem;">
-                Strict structured JSON output enforced by <code>gemini-3.8-flash</code> (<code>VIDEO_ANALYSIS_JSON_SCHEMA</code>). Streams directly into BigQuery and downstream Pub/Sub subscribers with zero ETL parsing errors.
-              </p>
-              <pre class="json-code-box" tabindex="0"><code id="operational-json-code"></code></pre>
-            </details>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <!-- =================================================================== -->
-    <!-- VIEW 2: CROSS-VIDEO SEMANTIC MOMENT SEARCH (gemini-embedding-2)     -->
-    <!-- =================================================================== -->
-    <section id="view-search" class="tab-view" aria-labelledby="heading-search" hidden>
-      <div class="panel search-hero-panel">
-        <div class="panel-header">
-          <div>
-            <span class="eyebrow">GEMINI EMBEDDING 2 + BIGQUERY VECTOR_SEARCH</span>
-            <h2 id="heading-search">Cross-Video Semantic Moment Discovery</h2>
-            <p class="text-muted">
-              Search across visual actions, spoken dialogue, and on-screen OCR simultaneously—and jump directly to the exact video timestamp.
-            </p>
-          </div>
-          <span class="badge badge-accent" id="embedding-mode-badge">gemini-embedding-2 (768-dim COSINE)</span>
-        </div>
-
-        <search aria-label="Semantic Video Moment Search">
-          <form id="semantic-search-form" class="search-bar-form">
-            <label for="semantic-search-input" class="sr-only">Describe the exact video moment to find</label>
-            <input
-              type="search"
-              id="semantic-search-input"
-              name="q"
-              placeholder="e.g., Find all video moments where a user drinks a soda near an electric car"
-              value="Find all video moments where a user drinks a soda near an electric car"
-              required
-            >
-            <button type="submit" class="btn btn-primary" id="run-search-btn">
-              Search Video Moments
-            </button>
-          </form>
-        </search>
-
-        <div class="preset-queries-row">
-          <span class="preset-label">Try preset enterprise queries:</span>
-          <div class="preset-chips" id="preset-query-chips"></div>
-        </div>
-      </div>
-
-      <div class="search-results-layout">
-        <div class="panel">
-          <div class="panel-header">
-            <h3>Ranked Multimodal Moment Matches</h3>
-            <span class="text-muted" id="search-latency-label">Executed in 22ms</span>
-          </div>
-          <div class="search-results-list" id="search-results-list"></div>
-        </div>
-
-        <div class="panel sql-inspector-panel">
-          <div class="panel-header">
-            <h3>Executed BigQuery <code>VECTOR_SEARCH</code> SQL</h3>
-            <span class="badge badge-subtle">IVF Cosine Index</span>
-          </div>
-          <figure class="code-figure">
-            <figcaption>Generated dynamically for BigQuery table <code>vividscale_analytics.video_moment_embeddings</code>:</figcaption>
-            <pre tabindex="0"><code id="search-bigquery-sql" class="language-sql"></code></pre>
-          </figure>
-        </div>
-      </div>
-    </section>
-
-    <!-- =================================================================== -->
-    <!-- VIEW 3: GCS VIDEO ASSET MANAGER & ATOMIC PURGE (7-Day Lifecycle)    -->
-    <!-- =================================================================== -->
-    <section id="view-assets" class="tab-view" aria-labelledby="heading-assets" hidden>
-      <div class="economics-grid">
         <div class="panel">
           <div class="panel-header">
             <div>
-              <span class="eyebrow">CLOUD STORAGE CMEK + 7-DAY LIFECYCLE + ATOMIC PURGE</span>
-              <h2 id="heading-assets">GCS Video Asset Library &amp; Purge Manager</h2>
+              <span class="eyebrow">ASYNC PUB/SUB INGESTION &amp; GCS 7-DAY LIFECYCLE</span>
+              <h2 id="heading-videos">Uploaded Videos &amp; Inspection Outputs</h2>
               <p class="text-muted">
-                Production raw videos upload via V4 Signed URLs to <code>gs://vividscale-raw-assets</code> and auto-expire after 7 days. Use <strong>🗑️ Delete Asset</strong> for immediate two-way atomic purge from GCS and BigQuery.
+                New uploads process asynchronously in the background via Cloud Pub/Sub (<code>video-audit-events</code>). Click any processed video row to inspect its video player, timeline, brand placements, and GARM scorecard.
               </p>
             </div>
             <div style="display:flex;gap:0.5rem;align-items:center;">
-              <button type="button" class="btn btn-outline btn-sm" id="reset-catalog-btn">
-                Restore Default Catalog
+              <button type="button" class="btn btn-outline btn-sm" id="refresh-catalog-btn" title="Refresh video catalog from server">
+                🔄 Refresh List
               </button>
             </div>
           </div>
 
           <div id="purge-toast-banner" class="verdict-banner status-REVIEW hidden" style="margin-bottom:0.85rem;"></div>
 
-          <div class="table-responsive" id="assets-manager-table-wrap"></div>
+          <div class="table-responsive" id="videos-master-table-wrap"></div>
         </div>
 
-        <div class="panel">
-          <div class="panel-header">
-            <div>
-              <span class="eyebrow">ZERO-OPS STORAGE GOVERNANCE</span>
-              <h3>Direct V4 Signed-URL Flow &amp; Automated 7-Day GCS Lifecycle Policy</h3>
+        <!-- Collapsible Pub/Sub Event Bus Audit Log -->
+        <details class="panel" style="margin-top:1rem;">
+          <summary style="cursor:pointer;font-weight:700;font-size:0.88rem;display:flex;justify-content:space-between;align-items:center;">
+            <span>📡 View Live Cloud Eventarc &amp; Pub/Sub Fan-Out Log (<code>video-audit-events</code>)</span>
+            <span class="badge badge-subtle">3 Parallel Subscribers</span>
+          </summary>
+          <div id="eventarc-log-list" class="eventarc-log-list" style="margin-top:0.75rem;"></div>
+        </details>
+      </div>
+
+      <!-- DETAIL VIEW: SINGLE SELECTED VIDEO INSPECTION -->
+      <div id="video-detail-view" hidden>
+        <div class="detail-top-bar">
+          <button type="button" class="btn btn-outline" id="back-to-videos-btn">
+            ← Back to All Videos
+          </button>
+          <div class="detail-title-group">
+            <span class="platform-pill" id="player-platform-pill">TikTok</span>
+            <h2 id="player-video-title">Video Title</h2>
+            <span class="text-muted" id="player-creator-meta">@creator • gs://...</span>
+          </div>
+          <div class="detail-telemetry-pills">
+            <span class="badge badge-subtle" id="tele-latency">⚡ 3.5s</span>
+            <span class="badge badge-success" id="tele-cost">💰 $0.0325</span>
+            <span class="badge badge-accent" id="tele-safety">🛡️ 98% SAFE</span>
+            <span class="badge badge-subtle" id="tele-tokens">🪙 15,500 tok</span>
+          </div>
+        </div>
+
+        <div class="analyzer-grid">
+          <!-- Left Column: Video Player & Timeline for THIS Video -->
+          <div class="player-column">
+            <div class="panel">
+              <div class="video-stage-container">
+                <video
+                  id="native-video-player"
+                  class="native-video-el hidden"
+                  controls
+                  playsinline
+                  width="360"
+                  height="540"
+                  preload="metadata"
+                >
+                  <track kind="captions" srclang="en" label="English AI Transcript" default>
+                </video>
+
+                <canvas
+                  id="bbox-overlay-canvas"
+                  class="bbox-overlay-canvas hidden"
+                  width="360"
+                  height="540"
+                  aria-hidden="true"
+                ></canvas>
+
+                <canvas
+                  id="multimodal-stage-canvas"
+                  width="360"
+                  height="540"
+                  aria-label="Interactive multimodal video preview with bounding boxes and OCR"
+                ></canvas>
+              </div>
+
+              <div class="timeline-controls">
+                <div class="playback-bar">
+                  <button type="button" class="btn btn-primary btn-sm" id="play-pause-btn">Play</button>
+                  <span class="timecode-readout" id="timecode-readout">00:00 / 01:00</span>
+                  <label for="timeline-slider" class="sr-only">Seek video timeline</label>
+                  <input type="range" id="timeline-slider" min="0" max="60" step="0.2" value="0">
+                </div>
+                <div class="timeline-markers" id="timeline-markers" aria-label="Jump to highlight timestamps"></div>
+              </div>
+
+              <div class="active-moment-readout">
+                <div class="readout-row">
+                  <span class="modality-tag tag-visual">VISUAL</span>
+                  <p id="live-visual-desc">Loading visual scene...</p>
+                </div>
+                <div class="readout-row">
+                  <span class="modality-tag tag-audio">AUDIO</span>
+                  <p id="live-audio-transcript">Loading speech transcript...</p>
+                </div>
+                <div class="readout-row">
+                  <span class="modality-tag tag-ocr">OCR</span>
+                  <p id="live-ocr-text">Loading on-screen text...</p>
+                </div>
+              </div>
             </div>
-            <span class="badge badge-success">CMEK Encrypted</span>
           </div>
 
-          <div class="architecture-diagram-box" style="margin-bottom:0.9rem;">
-            <div class="arch-step">
-              <strong>1. Client UI</strong>
-              <span>V4 Signed URL PUT</span>
-            </div>
-            <span class="arch-arrow" aria-hidden="true">→</span>
-            <div class="arch-step arch-highlight">
-              <strong>2. GCS Raw Bucket</strong>
-              <span>Auto-Purge @ 7 Days</span>
-            </div>
-            <span class="arch-arrow" aria-hidden="true">→</span>
-            <div class="arch-step">
-              <strong>3. Eventarc + Pub/Sub</strong>
-              <span><code>object.v1.finalized</code></span>
-            </div>
-            <span class="arch-arrow" aria-hidden="true">→</span>
-            <div class="arch-step arch-highlight">
-              <strong>4. BigQuery Vectors</strong>
-              <span>Permanent Metadata</span>
+          <!-- Right Column: Inspection Details Strictly for THIS Selected Video -->
+          <div class="intelligence-column">
+            <div class="panel">
+              <div class="inspector-subtabs" role="tablist" aria-label="Selected video inspection details">
+                <button type="button" class="inspector-subtab active" data-subtab="safety">
+                  🛡️ Brand Safety &amp; Ad Copy
+                </button>
+                <button type="button" class="inspector-subtab" data-subtab="placements">
+                  🏷️ Product Placements (<span id="placements-count-badge">0</span>)
+                </button>
+                <button type="button" class="inspector-subtab" data-subtab="moments">
+                  ⏱️ Scene Moments (<span id="moments-count-badge">0</span>)
+                </button>
+                <button type="button" class="inspector-subtab" data-subtab="json">
+                  { } Raw JSON
+                </button>
+              </div>
+
+              <!-- SUB-PANE 1: BRAND SAFETY + LOCALIZED AD COPY -->
+              <div id="subpane-safety" class="inspector-subpane">
+                <div class="safety-header-row">
+                  <div>
+                    <span class="eyebrow">GARM MULTIMODAL COMPLIANCE</span>
+                    <h3>Brand Safety Policy Check</h3>
+                  </div>
+                  <div class="safety-score-badge" id="safety-score-badge">
+                    <span class="score-num" id="safety-score-num">98</span>
+                    <span class="score-max">/100</span>
+                  </div>
+                </div>
+
+                <div class="verdict-banner" id="safety-verdict-banner">
+                  <strong id="safety-verdict-label">SAFE FOR ENTERPRISE ADS</strong>
+                  <p id="safety-summary-rationale"></p>
+                </div>
+
+                <div id="safety-flags-container" class="safety-flags-container"></div>
+                <div class="garm-grid" id="garm-categories-grid"></div>
+
+                <hr class="section-divider">
+
+                <div class="panel-header" style="margin-bottom:0.6rem;">
+                  <div>
+                    <span class="eyebrow">GENERATED CAMPAIGN CAPTIONS &amp; TAGS</span>
+                    <h3>Multi-Market Localized Ad Copy</h3>
+                  </div>
+                  <div class="locale-switcher" id="locale-switcher" role="group" aria-label="Select target market locale">
+                    <button type="button" class="locale-btn active" data-locale="en-US">EN-US</button>
+                    <button type="button" class="locale-btn" data-locale="es-MX">ES</button>
+                    <button type="button" class="locale-btn" data-locale="ja-JP">JA</button>
+                    <button type="button" class="locale-btn" data-locale="de-DE">DE</button>
+                    <button type="button" class="locale-btn" data-locale="pt-BR">PT</button>
+                  </div>
+                </div>
+                <div class="localized-card" id="localized-card"></div>
+              </div>
+
+              <!-- SUB-PANE 2: DETECTED PRODUCT PLACEMENTS FOR THIS VIDEO -->
+              <div id="subpane-placements" class="inspector-subpane" hidden>
+                <div class="panel-header">
+                  <div>
+                    <span class="eyebrow">CLICK ANY PLACEMENT TO SEEK VIDEO PLAYER</span>
+                    <h3>Detected Brand Logos &amp; Product Placements</h3>
+                  </div>
+                </div>
+                <div class="placements-list" id="placements-list"></div>
+              </div>
+
+              <!-- SUB-PANE 3: EXTRACTED SCENE MOMENTS FOR THIS VIDEO -->
+              <div id="subpane-moments" class="inspector-subpane" hidden>
+                <div class="panel-header">
+                  <div>
+                    <span class="eyebrow">INDEXED TIMESTAMPS FOR THIS VIDEO</span>
+                    <h3>Extracted Multimodal Scene Moments</h3>
+                  </div>
+                </div>
+                <div class="placements-list" id="video-moments-list"></div>
+              </div>
+
+              <!-- SUB-PANE 4: OPERATIONAL RAW JSON FOR THIS VIDEO -->
+              <div id="subpane-json" class="inspector-subpane" hidden>
+                <div class="panel-header">
+                  <div>
+                    <span class="eyebrow">DETERMINISTIC SCHEMA CONTRACT</span>
+                    <h3>Structured JSON Output (This Video)</h3>
+                  </div>
+                  <span class="badge badge-subtle">Zero-ETL to BigQuery</span>
+                </div>
+                <pre class="json-code-box" tabindex="0"><code id="operational-json-code"></code></pre>
+              </div>
             </div>
           </div>
-
-          <figure class="code-figure">
-            <figcaption>Automated Bucket Lifecycle Rule (<code>gs://vividscale-raw-assets</code>):</figcaption>
-            <pre tabindex="0"><code id="gcs-lifecycle-code-block">{
-  "rule": [
-    {
-      "action": { "type": "Delete" },
-      "condition": {
-        "age": 7,
-        "matchesPrefix": ["tenants/", "uploads/"]
-      }
-    }
-  ]
-}</code></pre>
-          </figure>
         </div>
       </div>
     </section>
 
     <!-- =================================================================== -->
-    <!-- VIEW 4: EDITABLE AWS VS. GCP TCO EXECUTIVE CALCULATOR               -->
+    <!-- TAB 2: DEDICATED CROSS-VIDEO SEMANTIC MOMENT SEARCH                 -->
+    <!-- =================================================================== -->
+    <section id="view-search" class="tab-view" aria-labelledby="heading-search" hidden>
+      <div class="panel" style="max-width:1050px;margin:0 auto;">
+        <div class="panel-header">
+          <div>
+            <span class="eyebrow">GLOBAL CATALOG VECTOR SEARCH (GEMINI-EMBEDDING-2 + BIGQUERY)</span>
+            <h2 id="heading-search">Cross-Video Semantic Moment Search</h2>
+            <p class="text-muted">
+              Search across all processed videos in your ClipGuard library by visual actions, spoken dialogue, on-screen OCR, or detected brands (e.g., <em>"anyone used Yamaha brand"</em>).
+            </p>
+          </div>
+          <span class="badge badge-accent" id="embedding-mode-badge">gemini-embedding-2</span>
+        </div>
+
+        <form id="semantic-search-form" class="search-bar-form">
+          <label for="semantic-search-input" class="sr-only">Search across all video moments</label>
+          <input
+            type="search"
+            id="semantic-search-input"
+            name="q"
+            placeholder="Type a search query (e.g., anyone used Yamaha brand, or drinks a soda near an electric car)..."
+            value=""
+            required
+          >
+          <button type="submit" class="btn btn-primary" id="run-search-btn">Search All Videos</button>
+          <button type="button" class="btn btn-outline" id="clear-search-btn">Clear</button>
+        </form>
+
+        <div class="preset-queries-row">
+          <span class="preset-label">Quick Sample Queries:</span>
+          <div class="preset-chips" id="preset-query-chips"></div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin:1rem 0 0.6rem;">
+          <h3>Matched Video Moments</h3>
+          <span class="text-muted" id="search-latency-label"></span>
+        </div>
+
+        <div class="search-results-list" id="search-results-list">
+          <div class="empty-search-state">
+            Enter a natural-language query above (or click a Quick Sample Query chip) to run BigQuery <code>VECTOR_SEARCH</code> across all indexed videos.
+          </div>
+        </div>
+
+        <details id="search-sql-details" style="margin-top:1.1rem;" hidden>
+          <summary class="text-muted" style="cursor:pointer;font-weight:600;">
+            View Executed BigQuery <code>VECTOR_SEARCH</code> SQL Query
+          </summary>
+          <pre class="json-code-box" style="margin-top:0.5rem;"><code id="search-bigquery-sql"></code></pre>
+        </details>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 3: EDITABLE AWS VS. GCP TCO EXECUTIVE DASHBOARD                 -->
     <!-- =================================================================== -->
     <section id="view-economics" class="tab-view" aria-labelledby="heading-economics" hidden>
       <div class="economics-grid">
         <div class="panel">
           <div class="panel-header">
             <div>
-              <span class="eyebrow">CPO MARGIN &amp; CIO TCO BENCHMARK (ALL NUMBERS EDITABLE)</span>
-              <h2 id="heading-economics">AWS Multi-SaaS vs. Google Cloud Serverless TCO Simulator</h2>
+              <span class="eyebrow">EXECUTIVE TCO BENCHMARK (ALL RATES EDITABLE)</span>
+              <h2 id="heading-economics">AWS Multi-Service vs. Google Cloud Serverless TCO</h2>
             </div>
-            <span class="badge badge-success" id="savings-pct-badge">99.3% Cost Reduction</span>
+            <span class="badge badge-success" id="savings-pct-badge">90.0% TCO Reduction</span>
           </div>
 
           <div class="calculator-controls">
             <div class="control-group">
               <div class="control-label-row">
-                <label for="calc-daily-videos">Monthly Video Ad Ingestion Volume</label>
+                <label for="calc-daily-videos">Monthly Video Ingestion Volume</label>
                 <strong id="calc-daily-videos-val">50,000 videos / month</strong>
               </div>
               <input type="range" id="calc-daily-videos" min="5000" max="500000" step="5000" value="50000">
             </div>
           </div>
 
-          <!-- Editable Line-Item Cost Inputs for Both Stacks -->
           <div class="editable-costs-grid">
             <div class="cost-editor-box cost-editor-aws">
-              <h4>✏️ Editable AWS Per-Video Rates (60s Video)</h4>
+              <h4>✏️ AWS Per-Video Rates (60s Video + 2D Brand BBox &amp; Citations)</h4>
               <div class="cost-input-row">
-                <label for="aws-rek-mod">Rekognition Content Moderation ($/min)</label>
+                <label for="aws-rek-mod">Rekognition Moderation ($/min)</label>
                 <input type="number" id="aws-rek-mod" step="0.005" min="0" value="0.100">
               </div>
               <div class="cost-input-row">
-                <label for="aws-rek-label">Rekognition Label / Brand Detection ($/min)</label>
-                <input type="number" id="aws-rek-label" step="0.005" min="0" value="0.100">
+                <label for="aws-rek-label">Rekognition Labels + Custom Brand BBox ($/min)</label>
+                <input type="number" id="aws-rek-label" step="0.005" min="0" value="0.160">
               </div>
               <div class="cost-input-row">
-                <label for="aws-transcribe">Amazon Transcribe Audio STT ($/min)</label>
+                <label for="aws-transcribe">Amazon Transcribe STT ($/min)</label>
                 <input type="number" id="aws-transcribe" step="0.002" min="0" value="0.024">
               </div>
               <div class="cost-input-row">
-                <label for="aws-bedrock">Amazon Bedrock Claude Copy ($/run)</label>
-                <input type="number" id="aws-bedrock" step="0.001" min="0" value="0.005">
+                <label for="aws-bedrock">Amazon Bedrock Ad Copy (Claude Sonnet)</label>
+                <input type="number" id="aws-bedrock" step="0.005" min="0" value="0.020">
               </div>
               <div class="cost-input-row">
-                <label for="aws-ec2">EC2 / Lambda FFmpeg + SQS Glue ($/run)</label>
-                <input type="number" id="aws-ec2" step="0.001" min="0" value="0.015">
+                <label for="aws-ec2">EC2 / Step Functions BBox + Citation Glue ($/run)</label>
+                <input type="number" id="aws-ec2" step="0.001" min="0" value="0.020">
               </div>
             </div>
 
             <div class="cost-editor-box cost-editor-gcp">
-              <h4>✏️ Editable Google Cloud Per-Video Rates (60s Video)</h4>
+              <h4>✏️ Google Cloud Per-Video Rates (60s Video + Native BBox &amp; Citations)</h4>
               <div class="cost-input-row">
-                <label for="gcp-vision-cost">Vision &amp; Moderation (Bundled in Gemini)</label>
+                <label for="gcp-vision-cost">Vision Moderation + 2D Brand BBox (Bundled)</label>
                 <input type="number" id="gcp-vision-cost" step="0.0001" min="0" value="0.0000">
               </div>
               <div class="cost-input-row">
-                <label for="gcp-stt-cost">Audio Speech STT (Bundled in Gemini)</label>
+                <label for="gcp-stt-cost">Audio Speech STT + Citations (Bundled)</label>
                 <input type="number" id="gcp-stt-cost" step="0.0001" min="0" value="0.0000">
               </div>
               <div class="cost-input-row">
-                <label for="gcp-gemini-cost">Gemini 3.8 Flash Multimodal Pass (~15.5k tok)</label>
-                <input type="number" id="gcp-gemini-cost" step="0.0001" min="0" value="0.0013">
+                <label for="gcp-gemini-cost">Gemini 3.8 Flash Pass (14k in @ $1.50/M + 1.5k out @ $7.50/M)</label>
+                <input type="number" id="gcp-gemini-cost" step="0.00005" min="0" value="0.03225">
               </div>
               <div class="cost-input-row">
-                <label for="gcp-run-bq-cost">Cloud Run + Pub/Sub + BigQuery Vector ($/run)</label>
-                <input type="number" id="gcp-run-bq-cost" step="0.0001" min="0" value="0.0003">
+                <label for="gcp-run-bq-cost">Cloud Run + Pub/Sub Orchestration</label>
+                <input type="number" id="gcp-run-bq-cost" step="0.0001" min="0" value="0.0002">
               </div>
             </div>
           </div>
 
           <div class="comparison-cards" style="margin-top:0.9rem;">
             <div class="arch-card arch-legacy">
-              <span class="badge badge-danger">TRADITIONAL AWS 4-SERVICE STACK</span>
-              <h3>Rekognition + Transcribe + Bedrock + EC2</h3>
-              <ul class="arch-metrics-list">
-                <li><span>Total Cost per 60s Video:</span> <strong id="leg-unit-cost">$0.2440</strong></li>
-                <li><span>Monthly Spend:</span> <strong id="leg-daily-cost">$12,200 / mo</strong></li>
-                <li><span>Annualized Run-Rate:</span> <strong id="leg-annual-cost">$146,400 / yr</strong></li>
-                <li><span>Turnaround Latency:</span> <strong>180 – 240 seconds</strong></li>
+              <span class="badge badge-danger">AWS MULTI-SERVICE STACK</span>
+              <ul class="arch-metrics-list" style="margin-top:0.5rem;">
+                <li><span>Unit Cost:</span> <strong id="leg-unit-cost">$0.3240</strong></li>
+                <li><span>Monthly Spend:</span> <strong id="leg-daily-cost">$16,200 / mo</strong></li>
+                <li><span>Annual TCO:</span> <strong id="leg-annual-cost">$194,400 / yr</strong></li>
               </ul>
             </div>
 
             <div class="arch-card arch-gcp">
-              <span class="badge badge-success">GOOGLE CLOUD CROSS-PILLAR STREAM</span>
-              <h3>GCS + Eventarc/PubSub + Cloud Run + Gemini + BQ</h3>
-              <ul class="arch-metrics-list">
-                <li><span>Total Cost per 60s Video:</span> <strong class="text-success" id="gcp-unit-cost">$0.0016</strong></li>
-                <li><span>Monthly Spend:</span> <strong class="text-success" id="gcp-daily-cost">$80 / mo</strong></li>
-                <li><span>Annualized Run-Rate:</span> <strong class="text-success" id="gcp-annual-cost">$960 / yr</strong></li>
-                <li><span>Turnaround Latency:</span> <strong class="text-success">3 – 5 seconds (45x Faster)</strong></li>
+              <span class="badge badge-success">GOOGLE CLOUD NATIVE</span>
+              <ul class="arch-metrics-list" style="margin-top:0.5rem;">
+                <li><span>Unit Cost:</span> <strong class="text-success" id="gcp-unit-cost">$0.0325</strong></li>
+                <li><span>Monthly Spend:</span> <strong class="text-success" id="gcp-daily-cost">$1,623 / mo</strong></li>
+                <li><span>Annual TCO:</span> <strong class="text-success" id="gcp-annual-cost">$19,470 / yr</strong></li>
               </ul>
             </div>
           </div>
 
-          <!-- Service-by-Service Comparative Breakdown Table -->
-          <div class="table-responsive" style="margin-top:0.95rem;" id="tco-breakdown-table-wrap"></div>
-
           <div class="annual-savings-callout">
             <div>
-              <span>NET ANNUAL INFRASTRUCTURE SAVINGS</span>
-              <strong id="net-annual-savings">$145,440 / year saved</strong>
+              <span>ANNUALIZED COST SAVINGS</span>
+              <strong id="net-annual-savings">$174,930 / year saved</strong>
             </div>
             <div>
-              <span>MONTHLY TCO SAVED</span>
-              <strong id="net-monthly-savings">$12,120 / month saved</strong>
+              <span>MONTHLY SAVINGS</span>
+              <strong id="net-monthly-savings">$14,578 / month saved</strong>
             </div>
           </div>
         </div>
@@ -513,102 +426,59 @@
         <div class="panel">
           <div class="panel-header">
             <div>
-              <span class="eyebrow">SERVERLESS EVENT-DRIVEN + PUB/SUB FAN-OUT</span>
-              <h2>Cloud Run + Pub/Sub + Secret Manager + BigQuery Artifacts</h2>
-            </div>
-            <div class="artifact-Subtabs" role="group" aria-label="Deployment code artifacts">
-              <button type="button" class="subtab-btn active" data-artifact="sql">BigQuery Vector DDL</button>
-              <button type="button" class="subtab-btn" data-artifact="deploy">Cloud Run &amp; Pub/Sub CLI</button>
-              <button type="button" class="subtab-btn" data-artifact="schema">Gemini JSON Schema</button>
+              <span class="eyebrow">SERVICE-BY-SERVICE BREAKDOWN</span>
+              <h3>Comparative AWS vs. Google Cloud Architecture Table</h3>
             </div>
           </div>
 
-          <div class="architecture-diagram-box">
-            <div class="arch-step">
-              <strong>1. GCS Bucket</strong>
-              <span>Signed URL + 7d TTL</span>
-            </div>
-            <span class="arch-arrow" aria-hidden="true">→</span>
-            <div class="arch-step">
-              <strong>2. Eventarc (Role A)</strong>
-              <span>Pub/Sub + DLQ</span>
-            </div>
-            <span class="arch-arrow" aria-hidden="true">→</span>
-            <div class="arch-step arch-highlight">
-              <strong>3. Cloud Run + Gemini</strong>
-              <span>Single Multimodal Pass</span>
-            </div>
-            <span class="arch-arrow" aria-hidden="true">→</span>
-            <div class="arch-step arch-highlight">
-              <strong>4. Pub/Sub (Role B)</strong>
-              <span><code>video-audit-events</code></span>
-            </div>
-            <span class="arch-arrow" aria-hidden="true">→</span>
-            <div class="arch-step">
-              <strong>5. 3x Subscribers</strong>
-              <span>BQ • Webhook • Quarantine</span>
+          <div class="table-responsive" id="tco-breakdown-table-wrap"></div>
+        </div>
+      </div>
+
+      <!-- COLLAPSED AT BOTTOM: PRODUCTION GCP DEPLOYMENT ARTIFACTS -->
+      <details class="panel" style="margin-top:1rem;">
+        <summary style="cursor:pointer;font-weight:700;font-size:0.9rem;display:flex;justify-content:space-between;align-items:center;">
+          <span>🛠️ View Production GCP Deployment Artifacts (BigQuery DDL, Cloud Run &amp; Pub/Sub CLI, JSON Schema)</span>
+          <span class="badge badge-subtle">Click to Expand</span>
+        </summary>
+
+        <div style="margin-top:0.85rem;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.6rem;">
+            <strong>Select Artifact:</strong>
+            <div role="group" aria-label="Deployment code artifacts" style="display:flex;gap:0.35rem;">
+              <button type="button" class="subtab-btn active" data-artifact="sql">BigQuery DDL</button>
+              <button type="button" class="subtab-btn" data-artifact="deploy">Cloud Run &amp; Pub/Sub CLI</button>
+              <button type="button" class="subtab-btn" data-artifact="schema">JSON Schema</button>
             </div>
           </div>
 
           <figure class="code-figure">
             <figcaption id="artifact-caption">Production BigQuery DDL (<code>gcp/bigquery_schema.sql</code>):</figcaption>
-            <pre tabindex="0"><code id="artifact-code-block"></code></pre>
+            <pre class="json-code-box" tabindex="0"><code id="artifact-code-block"></code></pre>
           </figure>
         </div>
-      </div>
-    </section>
-
-    <!-- =================================================================== -->
-    <!-- VIEW 5: EXECUTIVE BRAND SAFETY DASHBOARD & PUB/SUB FAN-OUT FEED     -->
-    <!-- =================================================================== -->
-    <section id="view-dashboard" class="tab-view" aria-labelledby="heading-dashboard" hidden>
-      <div class="kpi-row" id="dashboard-kpi-row"></div>
-
-      <div class="dashboard-grid">
-        <div class="panel">
-          <div class="panel-header">
-            <h2 id="heading-dashboard">Catalog Brand Safety Compliance Breakdown</h2>
-            <span class="badge badge-subtle">Looker Studio Executive Feed</span>
-          </div>
-          <div id="dashboard-compliance-table-wrap" class="table-responsive"></div>
-        </div>
-
-        <div class="panel">
-          <div class="panel-header">
-            <div>
-              <span class="eyebrow">EVENTARC INGRESS (ROLE A) + PUB/SUB FAN-OUT (ROLE B)</span>
-              <h3>Live Cloud Event &amp; Pub/Sub <code>video-audit-events</code> Log</h3>
-            </div>
-            <button type="button" class="btn btn-secondary btn-sm" id="simulate-eventarc-btn">
-              Trigger Simulated GCS Object Finalize Event
-            </button>
-          </div>
-          <div id="eventarc-log-list" class="eventarc-log-list"></div>
-        </div>
-      </div>
+      </details>
     </section>
   </main>
 
-  <!-- ===================================================================== -->
-  <!-- MODAL DIALOG 1: UPLOAD / INGEST VIDEO (.MP4)                          -->
-  <!-- ===================================================================== -->
+  <!-- MODAL 1: NON-BLOCKING VIDEO UPLOAD -->
   <dialog id="upload-modal" closedby="any" aria-labelledby="upload-modal-title">
     <div class="modal-inner">
       <div class="modal-header">
-        <h2 id="upload-modal-title">Ingest Creator Video into ClipGuard Pipeline</h2>
+        <h2 id="upload-modal-title">Upload Video Asset (.mp4 / .mov)</h2>
         <form method="dialog">
-          <button type="submit" value="cancel" class="btn-icon" aria-label="Close upload dialog">✕</button>
+          <button type="submit" value="cancel" class="btn-icon" aria-label="Close">✕</button>
         </form>
       </div>
 
       <form id="upload-video-form" class="modal-body-form">
         <p class="text-muted">
-          Upload any <code>.mp4</code> or <code>.webm</code> short-form video (up to 25MB) to run native multimodal analysis without FFmpeg frame-chopping. If a live <code>GEMINI_API_KEY</code> is configured, ClipGuard sends the video bytes directly to <code>gemini-3.8-flash</code> with JSON Schema enforcement; otherwise it runs an instant Eventarc pipeline simulation.
+          Your video will immediately appear at the top of <strong>1. Videos &amp; Inspection</strong> and process in the background via Cloud Pub/Sub (<code>video-audit-events</code>) and Gemini 3.8 Flash.
         </p>
 
         <div class="form-field">
-          <label for="upload-title">Campaign / Reel Title</label>
-          <input type="text" id="upload-title" name="title" placeholder="e.g., Summer Cold Brew Taste Test" required>
+          <label for="upload-title">Campaign / Video Title</label>
+          <input type="text" id="upload-title" name="title" placeholder="e.g., Yamaha Piano Demo" required>
         </div>
 
         <div class="form-row-2">
@@ -617,7 +487,7 @@
             <input type="text" id="upload-creator" name="creator" value="@alex.creates" required>
           </div>
           <div class="form-field">
-            <label for="upload-platform">Target Platform</label>
+            <label for="upload-platform">Platform</label>
             <select id="upload-platform" name="platform">
               <option value="TikTok">TikTok</option>
               <option value="YouTube Shorts">YouTube Shorts</option>
@@ -627,55 +497,46 @@
         </div>
 
         <div class="form-field">
-          <label for="upload-file">Video File (<code>.mp4</code>, <code>.webm</code> — optional for simulated ingest)</label>
+          <label for="upload-file">Video File (<code>.mp4</code>, <code>.mov</code>, <code>.webm</code>)</label>
           <input type="file" id="upload-file" name="video" accept="video/mp4,video/webm,video/quicktime">
-        </div>
-
-        <div id="upload-progress-box" class="pipeline-trace-box" hidden>
-          <p id="upload-status-text">Dispatching GCS Object Finalize -> Cloud Run -> Gemini 3.8 Flash...</p>
-          <progress id="upload-progress-bar" value="25" max="100"></progress>
         </div>
 
         <div class="modal-actions">
           <button type="button" class="btn btn-outline" id="cancel-upload-btn">Cancel</button>
-          <button type="submit" class="btn btn-primary" id="submit-upload-btn">
-            Run Multimodal Ingestion
-          </button>
+          <button type="submit" class="btn btn-primary" id="submit-upload-btn">Upload &amp; Process in Background</button>
         </div>
       </form>
     </div>
   </dialog>
 
-  <!-- ===================================================================== -->
-  <!-- MODAL DIALOG 2: DUAL-MODE API KEY & GCP SETTINGS                      -->
-  <!-- ===================================================================== -->
+  <!-- MODAL 2: QUIET API & DEMO SETTINGS -->
   <dialog id="settings-modal" closedby="any" aria-labelledby="settings-modal-title">
     <div class="modal-inner">
       <div class="modal-header">
-        <h2 id="settings-modal-title">Dual-Mode Configuration (Local + Live Gemini 3.8 API)</h2>
+        <h2 id="settings-modal-title">ClipGuard Settings &amp; Demo Controls</h2>
         <form method="dialog">
-          <button type="submit" value="cancel" class="btn-icon" aria-label="Close settings dialog">✕</button>
+          <button type="submit" value="cancel" class="btn-icon" aria-label="Close">✕</button>
         </form>
       </div>
 
       <form id="settings-form" class="modal-body-form">
-        <p class="text-muted">
-          ClipGuard works out-of-the-box in <strong>Instant Pitch / Simulation Mode</strong>. To enable live multimodal video calls to <code>gemini-3.8-flash</code> and live 768-dim vector queries via <code>gemini-embedding-2</code>, enter a Gemini API key below (stored only in your browser session memory).
+        <p class="text-muted" id="api-status-label">
+          Status: Using Server Secret Manager / <code>.env</code> Key
         </p>
 
         <div class="form-field">
-          <label for="gemini-api-key-input">Gemini API Key (Optional)</label>
-          <input
-            type="password"
-            id="gemini-api-key-input"
-            placeholder="AIzaSy..."
-            autocomplete="off"
-          >
+          <label for="gemini-api-key-input">Override Session Gemini API Key (Optional)</label>
+          <input type="password" id="gemini-api-key-input" placeholder="Uses server key by default" autocomplete="off">
         </div>
 
-        <div class="modal-actions">
-          <button type="button" class="btn btn-outline" id="clear-key-btn">Use Simulation Mode</button>
-          <button type="submit" class="btn btn-primary">Save Session Configuration</button>
+        <div class="modal-actions" style="justify-content:space-between;">
+          <button type="button" class="btn btn-outline btn-sm" id="reset-catalog-btn">
+            Reset to Default 5 Demo Videos
+          </button>
+          <div style="display:flex;gap:0.4rem;">
+            <button type="button" class="btn btn-outline" id="clear-key-btn">Use Server Default</button>
+            <button type="submit" class="btn btn-primary">Save</button>
+          </div>
         </div>
       </form>
     </div>

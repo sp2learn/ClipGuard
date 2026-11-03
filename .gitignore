@@ -17,3 +17,6 @@ node_modules/
 npm-debug.log*
 .DS_Store
 
+
+# Interview presentation (kept local)
+presentation/
