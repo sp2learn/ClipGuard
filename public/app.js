@@ -392,15 +392,18 @@ function renderVideosMasterView() {
           bs.status === "SAFE" ? "badge-success" : bs.status === "REVIEW" ? "badge-warning" : "badge-danger";
 
         // Extracted Brand Placements for this video
-        const brandBadges = (v.productPlacements || [])
-          .map((pp) => {
-            const label = pp.brand || pp.productName;
-            const isUnbranded = /no brand|unbranded|none/i.test(label);
-            return `<span class="badge ${isUnbranded ? "badge-subtle" : "badge-accent"}" title="${escapeHtml(
-              pp.productName
-            )}">${isUnbranded ? "🚫" : "🏷️"} ${escapeHtml(label)}</span>`;
-          })
-          .join(" ");
+        // One badge per unique brand. "No Brand Detected" only when the video has no branded placement at all
+        // (unbranded objects in a branded video are summarised instead of shown as a contradictory badge).
+        const placements = v.productPlacements || [];
+        const isUnbrandedPp = (pp) => /no brand|unbranded|^none$/i.test(pp.brand || pp.productName || "");
+        const brandNames = [...new Set(placements.filter((pp) => !isUnbrandedPp(pp)).map((pp) => pp.brand || pp.productName))];
+        const unbrandedCount = placements.filter(isUnbrandedPp).length;
+        const brandBadges = brandNames.length
+          ? brandNames.map((b) => `<span class="badge badge-accent">🏷️ ${escapeHtml(b)}</span>`).join(" ") +
+            (unbrandedCount
+              ? ` <span class="badge badge-subtle" title="Objects with no visible or spoken brand">+${unbrandedCount} unbranded object${unbrandedCount > 1 ? "s" : ""}</span>`
+              : "")
+          : `<span class="badge badge-subtle">🚫 No Brand Detected</span>`;
 
         // Extracted SEO Hashtags for this video
         const seoTags = (v.localizedMarketing?.["en-US"]?.seoTags || [])

@@ -62,7 +62,7 @@ SELECT
   ROUND(AVG(brand_safety_score), 1) AS avg_brand_safety_score,
   ROUND(AVG(processing_time_ms) / 1000.0, 2) AS avg_latency_seconds,
   ROUND(COUNT(*) * 0.22, 2) AS legacy_pipeline_estimated_cost_usd,
-  ROUND(COUNT(*) * 0.0041, 2) AS gemini_flash_actual_cost_usd,
+  ROUND(COUNT(*) * 0.0325, 2) AS gemini_flash_actual_cost_usd,
   ROUND(COUNT(*) * (0.22 - 0.0041), 2) AS net_unit_cost_savings_usd
 FROM `vividscale_analytics.video_assets`
 GROUP BY ingest_date, platform, brand_safety_status;
